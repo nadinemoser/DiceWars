@@ -13,5 +13,10 @@ namespace DiceWars
         {
             InitializeComponent();
         }
+
+        private async void OnStartBtnClicked(object sender, EventArgs e)
+        {
+            await Navigation.PushModalAsync(new BoardViewModel());
+        }
     }
 }
