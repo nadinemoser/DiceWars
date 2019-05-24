@@ -6,12 +6,15 @@ namespace DiceWars.ViewModels
 {
     public class Field
     {
-        private Player _currentPlayer;
+        public Player Owner { get; set; }
         public int NumberOfDices;
+
+        public int X { get; set; }
+        public int Y { get; set; }
+        public bool IsOption { get; set; }
 
         public Field()
         {
-            _currentPlayer = new Player() { Name = "me" };
             NumberOfDices = 4;
         }
     }

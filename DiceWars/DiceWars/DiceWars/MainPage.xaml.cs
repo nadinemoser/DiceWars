@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DiceWars.Views;
 using Xamarin.Forms;
 
 namespace DiceWars
@@ -16,7 +17,7 @@ namespace DiceWars
 
         private async void OnStartBtnClicked(object sender, EventArgs e)
         {
-            await Navigation.PushModalAsync(new BoardViewModel());
+            await Navigation.PushModalAsync(new BetterBoardView());
         }
     }
 }

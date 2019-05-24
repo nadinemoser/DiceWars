@@ -14,16 +14,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="BoardViewModel.xaml.cs">
-      <DependentUpon>BoardViewModel.xaml</DependentUpon>
+    <Compile Update="BoardView.xaml.cs">
+      <DependentUpon>BoardView.xaml</DependentUpon>
     </Compile>
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Update="BoardViewModel.xaml">
+    <EmbeddedResource Update="BoardView.xaml">
       <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
     </EmbeddedResource>
-    <EmbeddedResource Update="BoardZwei.xaml">
+    <EmbeddedResource Update="Views\BetterBoardView.xaml">
       <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
     </EmbeddedResource>
   </ItemGroup>

@@ -9,6 +9,6 @@ namespace DiceWars.ViewModels
     public class Player
     {
         public string Name { get; set; }
-        public Color Color { get; set; }
+        public Color FavoriteColor { get; set; }
     }
 }

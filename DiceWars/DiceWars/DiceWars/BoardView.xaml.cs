@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using DiceWars.ViewModels;
 using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
@@ -8,7 +9,7 @@ using Xamarin.Forms.Xaml;
 namespace DiceWars
 {
 	[XamlCompilation(XamlCompilationOptions.Compile)]
-	public partial class BoardViewModel : ContentPage
+	public partial class BoardView : ContentPage
 	{
 	    private const int MAX_COLUMN = 4;
 	    private const int MAX_ROW = 4;
@@ -17,7 +18,7 @@ namespace DiceWars
 
 	    private Button _challengerField;
 	    private Button _defenderField;
-	    private List<Button> _fields;
+	    public List<Button> Fields { get; set; }
 	    private Player _currentPlayer;
 
 	    public Player CurrentPlayer
@@ -30,22 +31,22 @@ namespace DiceWars
 	        }
 	    }
 
-	    public BoardViewModel ()
+	    public BoardView ()
 		{
             StartGame();
-		    CurrentPlayer = new Player { Name = "me", Color = Color.Red };
+		    CurrentPlayer = new Player { Name = "me", FavoriteColor = Color.Red };
         }
 
 	    private void StartGame()
 	    {
 	        InitializeComponent();
-	        _fields = GetAllFieldsFromView();
+	        Fields = GetAllFieldsFromView();
 	        SetRandomNumbers();
         }    
 
 	    private void SetRandomNumbers()
 	    {
-	        foreach (var field in _fields)
+	        foreach (var field in Fields)
 	        {
 	            field.Text = $"{Random.Next(1, 4).ToString()}";
                 Console.WriteLine(field.Text);
@@ -67,7 +68,14 @@ namespace DiceWars
             }
 	        else
 	        {
-	            _defenderField = clickedField;
+	            if (_defenderField == _challengerField)
+	            {
+	                _challengerField = null;
+	                return;
+	            }
+
+                _defenderField = clickedField;
+	            
 	            StartDiceChallenge();
                 UpdateFieldForPlayer();
 	        }
@@ -88,10 +96,16 @@ namespace DiceWars
 	        else
 	        {
                 Console.Write("Challenger looses");
-	            //ChallengerLooses();
-	        }
+                ChallengerLooses();
+            }
 
 	        ResetCurrentFields();
+        }
+
+	    private void ChallengerLooses()
+	    {
+
+	        _challengerField.Text = "1";
         }
 
 	    private void ChallengerWins()
@@ -130,10 +144,9 @@ namespace DiceWars
 
 	    private bool HasTookAllFields(Button field)
 	    {
-	        foreach (var f in _fields)
+	        foreach (var f in Fields)
 	        {
-	            if (f.BackgroundColor != field.BackgroundColor 
-	                && GetDiceNumberFromField(f) > 1)
+	            if (f.BackgroundColor != field.BackgroundColor)
 	            {
 	                return false;
 	            }
@@ -143,7 +156,7 @@ namespace DiceWars
 
 	    private void ResetCurrentFields()
 	    {
-	        foreach (var field in _fields)
+	        foreach (var field in Fields)
 	        {
 	            field.IsEnabled = true;
 	        }
@@ -174,10 +187,10 @@ namespace DiceWars
 
 	    private void SetUiToSecondMove()
 	    {
-	        foreach (var field in _fields)
+	        foreach (var field in Fields)
 	        {
 	            if(IsSurroundingField(_challengerField, field)
-	            && field.BackgroundColor != CurrentPlayer.Color)
+	            && field.BackgroundColor != CurrentPlayer.FavoriteColor)
 	            {
 	                field.IsEnabled = true;
                     // TODO: display disabled field to gray
@@ -204,12 +217,26 @@ namespace DiceWars
 
 	    private List<Button> GetSurroundingOponentFields(Button centerField)
 	    {
-            //TODO: test
-            return _fields.Where(x => IsSurroundingField(centerField, x)
-                                        && centerField.BackgroundColor != x.BackgroundColor).ToList();
+	        var temp = new List<Button>();
+            foreach (var field in Fields)
+            {
+                if (IsSurroundingField(centerField, field)
+                    && centerField.BackgroundColor != field.BackgroundColor)
+                {
+                    temp.Add(field);
+                }
+            }
+
+	        return temp;
 	    }
 
-	    private int GetGridColumnLocation(Button button)
+	    private List<Button> GetSurroundingFields(Button centerField)
+	    {
+	        //TODO: test
+	        return Fields.Where(x => IsSurroundingField(centerField, x)).ToList();
+	    }
+
+        private int GetGridColumnLocation(Button button)
 	    {
 	        var width = Application.Current.MainPage.Width;
 	        var x = button.X;
@@ -256,57 +283,152 @@ namespace DiceWars
 	    private void OnEndRound(object sender, EventArgs e)
 	    {
 	        var endRoundButton = (Button)sender;
-       
-            ResetCurrentFields();
+
+	        GetReward();
 
 	        endRoundButton.IsEnabled = false;
-	        _fields.ForEach(x => x.IsEnabled = false);
+	        Fields.ForEach(x => x.IsEnabled = false);
 
+            ResetCurrentFields();
+            
             ComputerPlays();
 
 	        endRoundButton.IsEnabled = true;
-	        _fields.ForEach(x => x.IsEnabled = true);
+	        Fields.ForEach(x => x.IsEnabled = true);
 
             //set player back to user
-	        CurrentPlayer = new Player { Name = "me", Color = Color.Red };
+	        CurrentPlayer = new Player { Name = "me", FavoriteColor = Color.Red };
         }
-        
+
+	    private void GetReward()
+	    {
+	        var newDices = GetNumberOfConnectedFields();
+	        SpreadDices(newDices);
+        }
+
+	    private void SpreadDices(int newDices)
+	    {
+	        var ownFields = new List<Button>();
+            //Get own fields...
+	        foreach (var field in Fields)
+	        {
+	            if (CurrentPlayer.FavoriteColor == field.BackgroundColor)
+	            {
+                    ownFields.Add(field);
+	            }
+	        }
+
+	        var ownFieldsCount = ownFields.Count;
+
+            for (int i = 0; i < newDices; i++)
+	        {
+	            var randomIndex = Random.Next(ownFieldsCount);
+	            var currentDiceNumber = GetDiceNumberFromField(ownFields[randomIndex]);
+
+	            if (currentDiceNumber < 8)
+	            {
+	                ownFields[randomIndex].Text = (currentDiceNumber + 1).ToString();
+	            }
+	            else
+	            {
+                    i--;
+                }	            
+	        }          
+	    }
+
+	    public int GetNumberOfConnectedFields()
+	    {
+	        var ownerFields = Fields.Where(x => x.BackgroundColor == _currentPlayer.FavoriteColor).ToList();
+	        
+	        var connectedFields = new List<Button>();
+	        var counter = 0;
+	        var maxCounter = 0;
+            var stop = false;
+
+	        while (!stop)
+	        {
+	            foreach (var field in ownerFields)
+	            {
+	                var hasConnectedFields = !connectedFields.Any();
+
+                    if (hasConnectedFields)
+	                {
+	                    connectedFields.Add(field);
+	                    counter++;
+	                    continue;
+	                }
+
+	                var hasSurroundingField = ownerFields.Any(x => IsSurroundingField(x, field));
+
+                    if (hasSurroundingField)
+	                {
+	                    connectedFields.Add(field);
+	                    counter++;
+	                }
+	            }
+
+	            connectedFields.ForEach(x => ownerFields.Remove(x));
+
+	            if (maxCounter < counter)
+	            {
+	                maxCounter = counter;
+	            }
+
+	            counter = 0;
+	            var numberOwnerFields = ownerFields.Count();
+
+	            if (numberOwnerFields < maxCounter)
+	            {
+	                stop = true;
+	            }
+            }
+	        return maxCounter;
+	    }
+
 	    private void ComputerPlays()
 	    {
-	        var computer = new Player { Name = "computer", Color = Color.Yellow};
+	        var computer = new Player { Name = "computer", FavoriteColor = Color.Yellow};
 	        CurrentPlayer = computer;
             
 	        _defenderField = null;
 
-	        foreach (var challengerField in _fields)
+	        var ownFields = new List<Button>();
+
+	        ownFields = Fields.FindAll(x => x.BackgroundColor == computer.FavoriteColor 
+	                                        && GetDiceNumberFromField(x) > 1);
+
+	        foreach (var challengerField in ownFields)
 	        {
-	            if (challengerField.BackgroundColor == computer.Color 
-	                && GetDiceNumberFromField(challengerField) > 1)
+	            _challengerField = challengerField;
+                // funktioniert das?? o.O
+	            var oponentFields = GetSurroundingOponentFields(_challengerField);
+
+	            if (oponentFields.Any())
 	            {
-	                _challengerField = challengerField;
+	                _defenderField = oponentFields.First();
 
-	                var oponentFields = GetSurroundingOponentFields(_challengerField);
-
-	                if (oponentFields.Any())
-	                {
-	                    _defenderField = oponentFields.First();
-
-	                    StartDiceChallenge();
-                        break;
-	                }
-                }
+	                StartDiceChallenge();
+                    break;
+	            }
 	        }
+
+            GetReward();
         }
 
 	    private void UpdateFieldForPlayer()
 	    {
-	        foreach (var field in _fields)
+	        foreach (var field in Fields)
 	        {
-	            var enable = field.BackgroundColor == _currentPlayer.Color
-	                         && GetDiceNumberFromField(field) > 1;
-	            
-                field.IsEnabled = enable;
+	            if (field.BackgroundColor == CurrentPlayer.FavoriteColor
+	                && GetDiceNumberFromField(field) > 1)
+	            {
+	                field.IsEnabled = true;
+	            }
+	            else
+	            {
+	                field.IsEnabled = false;
+	            }
 	        }
-	    }
+        }
     }
 }
