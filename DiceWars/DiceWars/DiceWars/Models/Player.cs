@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Xamarin.Forms;
 
-using System.Text;
-using Xamarin.Forms;
-
-namespace DiceWars.ViewModels
+namespace DiceWars.Models
 {
     public class Player
     {
