@@ -8,7 +8,7 @@ namespace DiceWars.Test
     public class GameViewModelTest
     {
         [Fact]
-        public void GetNumberOfConnectedFields_NoConnectedFields_Returns0()
+        public void GetNumberOfConnectedFields_OneConnectedFields_Returns0()
         {
             // Arrange
             var user = new Player { FavoriteColor = Color.Yellow };
@@ -19,11 +19,13 @@ namespace DiceWars.Test
                 Board = GetFieldsWithComputerPlayer()
             };
 
+            boardViewModel.Board[0, 0] = new Field { Owner = user };
+            
             // Act
             var maxConnectedFields = boardViewModel.GetNumberOfConnectedFields();
 
             // Assert
-            Assert.True(maxConnectedFields == 0);
+            Assert.True(maxConnectedFields == 1);
         }
 
         [Fact]

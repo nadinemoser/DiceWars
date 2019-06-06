@@ -2,28 +2,28 @@
 using System.Collections.Generic;
 using System.Linq;
 using DiceWars.Models;
-using Xamarin.Forms;
 
 namespace DiceWars.ViewModels
 {
     public class GameViewModel
     {
+        private const int MAX_AMOUNT_OF_DICE = 8;
+
         private static readonly Random Random = new Random();
 
-        private readonly Player _user = new Player() { Name = "User", FavoriteColor = Color.Yellow };
-        private readonly Player _computer = new Player() { Name = "Computer", FavoriteColor = Color.Blue };
+        private readonly Player _user;
+        private readonly Player _computer;
 
-        private GameBoard _gameBoard;
         private Player _currentPlayer;
 
         public GameViewModel()
         {
-            _gameBoard = new GameBoard();
-            Board = _gameBoard.Board;
+            var gameBoard = new GameBoard();
+            Board = gameBoard.Board;
+            _user = gameBoard.User;
+            _computer = gameBoard.Computer;
             CurrentPlayer = _user;
         }
-
-        public Field[,] Board { get; set; }
         
         public Player CurrentPlayer
         {
@@ -35,6 +35,8 @@ namespace DiceWars.ViewModels
             }
         }
 
+        public Field[,] Board { get; set; }
+        
         public Field ChallengerField { get; set; }
         public Field DeffenderField { get; set; }
 
@@ -77,7 +79,7 @@ namespace DiceWars.ViewModels
         {
             foreach (var field in Board)
             {
-                if (field.Owner.FavoriteColor == CurrentPlayer.FavoriteColor &&
+                if (field.Owner == CurrentPlayer &&
                     field.NumberOfDices > 1 &&
                     IsNextToOpponentField(field))
                 {
@@ -95,7 +97,8 @@ namespace DiceWars.ViewModels
             foreach (var field in Board)
             {
                 if (IsSurroundingField(centerField, field) &&
-                    field.Owner.FavoriteColor != CurrentPlayer.FavoriteColor)
+                    field.Owner != CurrentPlayer)
+
                 {
                     return true;
                 }
@@ -106,16 +109,12 @@ namespace DiceWars.ViewModels
 
         private bool IsSurroundingField(Field centerField, Field opponentField)
         {
-            var xDifference = Math.Abs(opponentField.X - centerField.X);
-            var yDifference = Math.Abs(opponentField.Y - centerField.Y);
+            var xDifference = Math.Abs(opponentField.XCoordinate - centerField.XCoordinate);
+            var yDifference = Math.Abs(opponentField.YCoordinate - centerField.YCoordinate);
 
-            if (xDifference == 1 && yDifference == 0 ||
-                xDifference == 0 && yDifference == 1)
-            {
-                return true;
-            }
+            var totalDifference = xDifference + yDifference;
 
-            return false;
+            return totalDifference == 1;
         }
 
         private void SetPossibleOptionsForChallengerField()
@@ -132,13 +131,8 @@ namespace DiceWars.ViewModels
 
         private bool IsOpponentField(Field centerField, Field opponentField)
         {
-            if (IsSurroundingField(centerField, opponentField) 
-                && centerField.Owner.FavoriteColor != opponentField.Owner.FavoriteColor)
-            {
-                return true;
-            }
-
-            return false;
+            return IsSurroundingField(centerField, opponentField) 
+                   && centerField.Owner != opponentField.Owner;
         }
 
         private void StartDiceChallenge()
@@ -196,7 +190,7 @@ namespace DiceWars.ViewModels
 
             foreach (var field in Board)
             {
-                if (field.Owner.FavoriteColor == CurrentPlayer.FavoriteColor
+                if (field.Owner == CurrentPlayer
                     && field.NumberOfDices > 1)
                 {
                     ownFields.Add(field);
@@ -234,7 +228,7 @@ namespace DiceWars.ViewModels
             foreach (var field in Board)
             {
                 if (IsSurroundingField(centerField, field)
-                    && centerField.Owner.FavoriteColor != field.Owner.FavoriteColor)
+                    && centerField.Owner != field.Owner)
                 {
                     surroundingOpponentFields.Add(field);
                 }
@@ -255,8 +249,8 @@ namespace DiceWars.ViewModels
             
             foreach (var field in Board)
             {
-                if (CurrentPlayer.FavoriteColor == field.Owner.FavoriteColor 
-                    && field.NumberOfDices < 8)
+                if (CurrentPlayer == field.Owner 
+                    && field.NumberOfDices < MAX_AMOUNT_OF_DICE)
                 {
                     possibleOwnFields.Add(field);
                 }
@@ -265,11 +259,11 @@ namespace DiceWars.ViewModels
             var ownFieldsCount = possibleOwnFields.Count;
 
             var numberOfDice = possibleOwnFields.Select(x => x.NumberOfDices).Sum();
-            var maxSpaceForDice = ownFieldsCount * 8 - numberOfDice;
+            var maxSpaceForDice = ownFieldsCount * MAX_AMOUNT_OF_DICE - numberOfDice;
 
-            if (maxSpaceForDice < newDice)
+            if (maxSpaceForDice <= newDice)
             {
-                possibleOwnFields.ForEach(x => x.NumberOfDices = 8);
+                possibleOwnFields.ForEach(x => x.NumberOfDices = MAX_AMOUNT_OF_DICE);
                 return;
             }
 
@@ -277,7 +271,7 @@ namespace DiceWars.ViewModels
             {
                 var randomIndex = Random.Next(ownFieldsCount);
 
-                if (possibleOwnFields[randomIndex].NumberOfDices < 8)
+                if (possibleOwnFields[randomIndex].NumberOfDices < MAX_AMOUNT_OF_DICE)
                 {
                     possibleOwnFields[randomIndex].NumberOfDices++;
                 }
@@ -293,7 +287,7 @@ namespace DiceWars.ViewModels
             var ownerFields = new List<Field>();
             foreach (var field in Board)
             {
-                if (field.Owner.FavoriteColor == CurrentPlayer.FavoriteColor)
+                if (field.Owner == CurrentPlayer)
                 {
                     ownerFields.Add(field);
                 }
@@ -308,16 +302,14 @@ namespace DiceWars.ViewModels
             {
                 foreach (var field in ownerFields)
                 {
-                    var hasConnectedFields = !connectedFields.Any();
-
-                    if (hasConnectedFields)
+                    if (!connectedFields.Any())
                     {
                         connectedFields.Add(field);
                         counter++;
                         continue;
                     }
 
-                    var hasSurroundingField = ownerFields.Any(x => IsSurroundingField(x, field));
+                    var hasSurroundingField = connectedFields.Any(x => IsSurroundingField(x, field));
 
                     if (hasSurroundingField)
                     {
@@ -327,6 +319,7 @@ namespace DiceWars.ViewModels
                 }
 
                 connectedFields.ForEach(x => ownerFields.Remove(x));
+                connectedFields = new List<Field>();
 
                 if (maxCounter < counter)
                 {

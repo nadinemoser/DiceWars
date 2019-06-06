@@ -11,7 +11,6 @@ namespace DiceWars.Views
 	{
 	    private GameViewModel _gameViewModel;
 	    private Button _lastFramedField;
-	    private bool _isBusy;
 
 		public BetterBoardView ()
 		{
@@ -27,9 +26,9 @@ namespace DiceWars.Views
 
             foreach (var field in _gameViewModel.Board)
 	        {
-                var button = new Button{Text = $"{field.NumberOfDices}", BackgroundColor = field.Owner.FavoriteColor};
-	            Grid.SetColumn(button, field.X);
-	            Grid.SetRow(button, field.Y);
+                var button = new Button{Text = $"{field.NumberOfDices}", BackgroundColor = GetColor(field.Owner.FavoriteColor)};
+	            Grid.SetColumn(button, field.XCoordinate);
+	            Grid.SetRow(button, field.YCoordinate);
 
                 grid.Children.Add(button);
                 grid.Padding = new Thickness(0,0,0,0);
@@ -50,15 +49,9 @@ namespace DiceWars.Views
 
         private void OnEndRoundClicked(object sender, EventArgs e)
         {
-            if (_isBusy)
-            {
-                return;
-            }
             _gameViewModel.EndRound();
-            _isBusy = true;
             UpdateView();
             ResetLastFramedField();
-            _isBusy = false;
         }
 
 	    private void ResetLastFramedField()
@@ -72,25 +65,17 @@ namespace DiceWars.Views
 
 	    private void OnFieldClicked(object sender, EventArgs e)
         {
-            if (_isBusy)
-            {
-                return;
-            }
-
-            _isBusy = true;
             var field = (Button)sender;
 
             if (_lastFramedField == null)
             {
                 _lastFramedField = field;
-                _lastFramedField.BorderColor = Color.Red;
+                _lastFramedField.BorderColor = Xamarin.Forms.Color.Red;
                 _lastFramedField.BorderWidth = 2;
-                Console.WriteLine("RedBorder!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
             }
             else
             {
                 ResetLastFramedField();
-                Console.WriteLine("RedBNRDER ------------------------------------------------");
             }
 
             var x = Grid.GetColumn(field);
@@ -98,7 +83,6 @@ namespace DiceWars.Views
 
 	        _gameViewModel.FieldGotSelected(x, y);
 	        UpdateView();
-            _isBusy = false;
         }
 
 	    private void UpdateView()
@@ -108,17 +92,15 @@ namespace DiceWars.Views
 	            var button = (Button) view;
 	            foreach (var field in _gameViewModel.Board)
 	            {
-	                if (Grid.GetColumn(button) == field.X && Grid.GetRow(button) == field.Y)
+	                if (Grid.GetColumn(button) == field.XCoordinate && Grid.GetRow(button) == field.YCoordinate)
 	                {
-	                    button.BackgroundColor = field.Owner.FavoriteColor;
+	                    button.BackgroundColor = GetColor(field.Owner.FavoriteColor);
 	                    button.Text = field.NumberOfDices.ToString();
 	                    button.IsEnabled = field.IsOption;
 	                }
 	            }
 	        }
-
-            Console.WriteLine("Update View wurde aufgerufen :D :D ;:D :D :D ;:D :D :D ;:D");
-
+            
 	        if (HasGameEnd())
 	        {
 	            ShoeEndGameMessage();
@@ -155,5 +137,25 @@ namespace DiceWars.Views
 
 	        return true;
 	    }
+
+	    private Xamarin.Forms.Color GetColor(Color color)
+	    {
+	        switch (color)
+	        {
+	            case Color.Yellow:
+	            {
+	                return Xamarin.Forms.Color.Yellow;
+	            }
+	            case Color.Blue:
+	            {
+	                return Xamarin.Forms.Color.Blue;
+	            }
+	            default:
+	            {
+	                return Xamarin.Forms.Color.Black;
+	            }
+            }
+
+        }
 	}
 }

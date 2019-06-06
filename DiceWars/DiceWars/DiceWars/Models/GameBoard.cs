@@ -1,19 +1,18 @@
 ﻿using System;
-using Xamarin.Forms;
 
 namespace DiceWars.Models
 {
     public class GameBoard
     {
-        private const int MAX_HEIGHT = 4;
-        private const int MAX_WIDTH = 4;
+        private const int HEIGHT = 4;
+        private const int WIDTH = 4;
 
         private static readonly Random Random = new Random();
 
         public GameBoard()
         {
-            Computer = new Player { Name = "User", FavoriteColor = Color.Yellow };
-            User = new Player { Name = "Computer", FavoriteColor = Color.Blue };
+            User = new Player { Name = "User", FavoriteColor = Color.Yellow };
+            Computer = new Player { Name = "Computer", FavoriteColor = Color.Blue };
             GenerateBoard();
         }
 
@@ -23,15 +22,15 @@ namespace DiceWars.Models
 
         private void GenerateBoard()
         {
-            Board = new Field[MAX_WIDTH, MAX_HEIGHT];
+            Board = new Field[WIDTH, HEIGHT];
 
             var countUserFields = 0;
             var countComputerFields = 0;
 
             // generate fields
-            for (int x = 0; x < MAX_WIDTH; x++)
+            for (var x = 0; x < WIDTH; x++)
             {
-                for (int y = 0; y < MAX_HEIGHT; y++)
+                for (var y = 0; y < HEIGHT; y++)
                 {
                     var player = GetRandomPlayer(countUserFields, countComputerFields);
 
@@ -44,10 +43,8 @@ namespace DiceWars.Models
                         countComputerFields++;
                     }
 
-                    Board[x, y] = new Field()
+                    Board[x, y] = new Field(x, y)
                     {
-                        X = x,
-                        Y = y,
                         Owner =  player,
                         IsOption = true,
                         NumberOfDices = Random.Next(1, 4)
@@ -58,12 +55,13 @@ namespace DiceWars.Models
 
         private Player GetRandomPlayer(int countUserFields, int countComputerFields)
         {
-            var maxFieldsForPlayer = MAX_HEIGHT * MAX_WIDTH / 2;
+            var maxFieldsForPlayer = HEIGHT * WIDTH / 2;
          
             if (countUserFields == maxFieldsForPlayer)
             {
                 return Computer;
             }
+
             if (countComputerFields == maxFieldsForPlayer)
             {
                 return User;

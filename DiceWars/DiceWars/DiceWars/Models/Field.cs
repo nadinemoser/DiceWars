@@ -2,16 +2,16 @@
 {
     public class Field
     {
-        public Player Owner { get; set; }
-        public int NumberOfDices;
-
-        public int X { get; set; }
-        public int Y { get; set; }
-        public bool IsOption { get; set; }
-
-        public Field()
+        public Field(int xCoordinate, int yCoordinate)
         {
-            NumberOfDices = 4;
+            XCoordinate = xCoordinate;
+            YCoordinate = yCoordinate;
         }
+
+        public Player Owner { get; set; }
+        public int NumberOfDices { get; set; }
+        public int XCoordinate { get; }
+        public int YCoordinate { get; }
+        public bool IsOption { get; set; }
     }
 }
