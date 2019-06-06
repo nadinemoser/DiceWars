@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace DiceWars.Models
 {
@@ -18,11 +20,157 @@ namespace DiceWars.Models
 
         public Player Computer { get; set; }
         public Player User { get; set; }
-        public Field[,] Board { get; set; }
+        public Field[,] Fields { get; set; }
 
+        public void UpdateFieldsForPlayer(Player player)
+        {
+            foreach (var field in Fields)
+            {
+                if (field.Owner == player &&
+                    field.NumberOfDices > 1 &&
+                    IsNextToOpponentField(field, player))
+                {
+                    field.IsOption = true;
+                }
+                else
+                {
+                    field.IsOption = false;
+                }
+            }
+        }
+     
+        public bool IsOpponentField(Field centerField, Field opponentField)
+        {
+            return IsSurroundingField(centerField, opponentField)
+                   && centerField.Owner != opponentField.Owner;
+        }
+
+        public void SetPossibleOptionsForField(Field challengerField)
+        {
+            foreach (var field in Fields)
+            {
+                field.IsOption = IsOpponentField(challengerField, field);
+                if (field == challengerField)
+                {
+                    field.IsOption = true;
+                }
+            }
+        }
+
+        public List<Field> GetSurroundingOponentFields(Field centerField)
+        {
+            var surroundingOpponentFields = new List<Field>();
+            foreach (var field in Fields)
+            {
+                if (IsSurroundingField(centerField, field)
+                    && centerField.Owner != field.Owner)
+                {
+                    surroundingOpponentFields.Add(field);
+                }
+            }
+
+            return surroundingOpponentFields;
+        }
+
+        public List<Field> GetFieldsFromPlayer(Player player)
+        {
+            var playerFields = new List<Field>();
+
+            foreach (var field in Fields)
+            {
+                if (field.Owner == player
+                    && field.NumberOfDices > 1)
+                {
+                    playerFields.Add(field);
+                }
+            }
+
+            return playerFields;
+        }
+
+
+        public int GetNumberOfConnectedFields(Player currentPlayer)
+        {
+            var ownerFields = new List<Field>();
+            foreach (var field in Fields)
+            {
+                if (field.Owner == currentPlayer)
+                {
+                    ownerFields.Add(field);
+                }
+            }
+
+            var connectedFields = new List<Field>();
+            var counter = 0;
+            var maxCounter = 0;
+            var stop = false;
+
+            while (!stop)
+            {
+                foreach (var field in ownerFields)
+                {
+                    if (!connectedFields.Any())
+                    {
+                        connectedFields.Add(field);
+                        counter++;
+                        continue;
+                    }
+
+                    var hasSurroundingField = connectedFields.Any(x => IsSurroundingField(x, field));
+
+                    if (hasSurroundingField)
+                    {
+                        connectedFields.Add(field);
+                        counter++;
+                    }
+                }
+
+                connectedFields.ForEach(x => ownerFields.Remove(x));
+                connectedFields = new List<Field>();
+
+                if (maxCounter < counter)
+                {
+                    maxCounter = counter;
+                }
+
+                counter = 0;
+                var numberOwnerFields = ownerFields.Count();
+
+                if (numberOwnerFields < maxCounter)
+                {
+                    stop = true;
+                }
+            }
+
+            return maxCounter;
+        }
+        private bool IsNextToOpponentField(Field centerField, Player player)
+        {
+            foreach (var field in Fields)
+            {
+                if (IsSurroundingField(centerField, field) &&
+                    field.Owner != player)
+
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private bool IsSurroundingField(Field centerField, Field opponentField)
+        {
+            var xDifference = Math.Abs(opponentField.XCoordinate - centerField.XCoordinate);
+            var yDifference = Math.Abs(opponentField.YCoordinate - centerField.YCoordinate);
+
+            var totalDifference = xDifference + yDifference;
+
+            return totalDifference == 1;
+        }
         private void GenerateBoard()
         {
-            Board = new Field[WIDTH, HEIGHT];
+            Fields = new Field[WIDTH, HEIGHT];
 
             var countUserFields = 0;
             var countComputerFields = 0;
@@ -43,9 +191,9 @@ namespace DiceWars.Models
                         countComputerFields++;
                     }
 
-                    Board[x, y] = new Field(x, y)
+                    Fields[x, y] = new Field(x, y)
                     {
-                        Owner =  player,
+                        Owner = player,
                         IsOption = true,
                         NumberOfDices = Random.Next(1, 4)
                     };
@@ -56,7 +204,7 @@ namespace DiceWars.Models
         private Player GetRandomPlayer(int countUserFields, int countComputerFields)
         {
             var maxFieldsForPlayer = HEIGHT * WIDTH / 2;
-         
+
             if (countUserFields == maxFieldsForPlayer)
             {
                 return Computer;
@@ -74,5 +222,6 @@ namespace DiceWars.Models
 
             return Computer;
         }
+
     }
 }
