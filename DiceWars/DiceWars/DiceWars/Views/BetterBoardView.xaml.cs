@@ -11,6 +11,7 @@ namespace DiceWars.Views
 	{
 	    private GameViewModel _gameViewModel;
 	    private Button _lastFramedField;
+	    private GameResultsViewModel _gameResultViewModel;
 
 		public BetterBoardView ()
 		{
@@ -67,25 +68,21 @@ namespace DiceWars.Views
         {
             var field = (Button)sender;
 
-            if (_lastFramedField == null)
-            {
-                _lastFramedField = field;
-                _lastFramedField.BorderColor = Xamarin.Forms.Color.Red;
-                _lastFramedField.BorderWidth = 2;
-            }
-            else
-            {
-                ResetLastFramedField();
-            }
-
             var x = Grid.GetColumn(field);
 	        var y = Grid.GetRow(field);
 
-	        _gameViewModel.FieldGotSelected(x, y);
+	        _gameResultViewModel = _gameViewModel.FieldGotSelected(x, y);
 	        UpdateView();
         }
 
-	    private void UpdateView()
+        private void SetFrameForField(Button field)
+        {
+            _lastFramedField = field;
+            _lastFramedField.BorderColor = Xamarin.Forms.Color.Red;
+            _lastFramedField.BorderWidth = 2;
+        }
+
+        private void UpdateView()
 	    {
 	        foreach (var view in ((Grid)Content).Children.Where(c => c.GetType() == typeof(Button)))
 	        {
@@ -100,19 +97,50 @@ namespace DiceWars.Views
 	                }
 	            }
 	        }
-            
+
+	        UpdateViewWithResults();
+
 	        if (HasGameEnd())
 	        {
-	            ShoeEndGameMessage();
+	            ShowEndGameMessage();
 	        }
 	    }
 
-	    private async void ShoeEndGameMessage()
+	    private void UpdateViewWithResults()
+	    {
+	        if (_gameResultViewModel == null)
+	        {
+	            return;
+	        }
+
+	        if (_gameResultViewModel.ChallengerField != null 
+	            && _gameResultViewModel.DefenderField == null)
+	        {
+                var field = _gameResultViewModel.ChallengerField;
+                foreach (var view in ((Grid)Content).Children.Where(c => c.GetType() == typeof(Button)))
+                {
+                    var button = (Button)view;
+
+                    if (Grid.GetColumn(button) == field.XCoordinate && Grid.GetRow(button) == field.YCoordinate)
+                    {
+                        SetFrameForField(button);
+                    }
+                }
+            }
+
+	        if (_gameResultViewModel.ChallengerField != null 
+	            && _gameResultViewModel.DefenderField != null)
+	        {
+                ResetLastFramedField();
+	        }
+
+	    }
+
+	    private async void ShowEndGameMessage()
 	    {
 	        var player = _gameViewModel.Board[0, 0].Owner;
 	        bool answer = await DisplayAlert($"{player.Name} has won.", "new game?", "yes", "no");
 
-	        Console.WriteLine(answer);
 	        if (answer)
 	        {
 	            _gameViewModel = new GameViewModel();
@@ -129,7 +157,7 @@ namespace DiceWars.Views
 	        var fieldToCompareWith = _gameViewModel.Board[0, 0];
 	        foreach (var field in _gameViewModel.Board)
 	        {
-	            if (fieldToCompareWith.Owner.FavoriteColor != field.Owner.FavoriteColor)
+	            if (fieldToCompareWith.Owner != field.Owner)
 	            {
 	                return false;
 	            }

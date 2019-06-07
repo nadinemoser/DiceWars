@@ -15,6 +15,7 @@ namespace DiceWars.ViewModels
         private readonly Player _computer;
         private readonly GameBoard _gameBoard;
 
+        private GameResultsViewModel _gameResults;
         private Player _currentPlayer;
 
         public GameViewModel()
@@ -39,31 +40,38 @@ namespace DiceWars.ViewModels
         public Field[,] Board { get; set; }
         
         public Field ChallengerField { get; set; }
-        public Field DeffenderField { get; set; }
+        public Field DefenderField { get; set; }
 
-        public void FieldGotSelected(int x, int y)
+        public GameResultsViewModel FieldGotSelected(int x, int y)
         {
+            _gameResults = new GameResultsViewModel();
             var clickedField = Board[x, y];
 
             if (ChallengerField == null)
             {
                 ChallengerField = clickedField;
                 _gameBoard.SetPossibleOptionsForField(ChallengerField);
+                _gameResults.ChallengerField = ChallengerField;
             }
             else
             {
-                DeffenderField = clickedField;
+                DefenderField = clickedField;
 
-                if (DeffenderField == ChallengerField)
+                if (DefenderField == ChallengerField)
                 {
                     ResetCurrentFields();
                     _gameBoard.UpdateFieldsForPlayer(CurrentPlayer);
-                    return;
+                    return null;
                 }
+
+                _gameResults.ChallengerField = ChallengerField;
+                _gameResults.DefenderField = DefenderField;
 
                 StartDiceChallenge();
                 _gameBoard.UpdateFieldsForPlayer(CurrentPlayer);
             }
+
+            return _gameResults;
         }
 
         public void EndRound()
@@ -72,14 +80,16 @@ namespace DiceWars.ViewModels
             ResetCurrentFields();
 
             ComputerPlays();
+
+            ResetCurrentFields();
         }
         
         private void StartDiceChallenge()
         {
-            var rolledDiceNumberChallenger = RollDice(ChallengerField);
-            var rolledDiceNumberDefender = RollDice(DeffenderField);
+            _gameResults.RolledDiceNumberChallenger = RollDice(ChallengerField);
+            _gameResults.RolledDiceNumberDefender = RollDice(DefenderField);
             
-            if (rolledDiceNumberChallenger > rolledDiceNumberDefender)
+            if (_gameResults.RolledDiceNumberChallenger > _gameResults.RolledDiceNumberDefender)
             {
                 ChallengerWins();
             }
@@ -87,6 +97,7 @@ namespace DiceWars.ViewModels
             {
                 ChallengerLooses();
             }
+
             ResetCurrentFields();
         }
 
@@ -97,15 +108,15 @@ namespace DiceWars.ViewModels
 
         private void ChallengerWins()
         {
-            DeffenderField.Owner = CurrentPlayer;
-            DeffenderField.NumberOfDices = ChallengerField.NumberOfDices - 1;
+            DefenderField.Owner = CurrentPlayer;
+            DefenderField.NumberOfDices = ChallengerField.NumberOfDices - 1;
             ChallengerField.NumberOfDices = 1;
         }
         
         private void ResetCurrentFields()
         {
             ChallengerField = null;
-            DeffenderField = null;
+            DefenderField = null;
         }
 
         private int RollDice(Field field)
@@ -138,10 +149,10 @@ namespace DiceWars.ViewModels
                 foreach (var opponentField in opponentFields)
                 {
                     ChallengerField = challengerField;
-                    DeffenderField = opponentField;
+                    DefenderField = opponentField;
 
                     if (challengerField.NumberOfDices > 1 
-                        && _gameBoard.IsOpponentField(ChallengerField, DeffenderField))
+                        && _gameBoard.IsOpponentField(ChallengerField, DefenderField))
                     {
                         StartDiceChallenge();
                     }

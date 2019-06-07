@@ -26,35 +26,31 @@ namespace DiceWars.Models
         {
             foreach (var field in Fields)
             {
-                if (field.Owner == player &&
-                    field.NumberOfDices > 1 &&
-                    IsNextToOpponentField(field, player))
-                {
-                    field.IsOption = true;
-                }
-                else
-                {
-                    field.IsOption = false;
-                }
+                field.IsOption = field.Owner == player &&
+                                 field.NumberOfDices > 1 &&
+                                 IsNextToOpponentField(field, player);
             }
         }
      
         public bool IsOpponentField(Field centerField, Field opponentField)
         {
-            return IsSurroundingField(centerField, opponentField)
-                   && centerField.Owner != opponentField.Owner;
+            if (IsSurroundingField(centerField, opponentField)
+                && centerField.Owner != opponentField.Owner)
+            {
+                return true;
+            }
+
+            return false;
         }
 
         public void SetPossibleOptionsForField(Field challengerField)
         {
             foreach (var field in Fields)
             {
-                field.IsOption = IsOpponentField(challengerField, field);
-                if (field == challengerField)
-                {
-                    field.IsOption = true;
-                }
+                field.IsOption = IsOpponentField(challengerField, field);           
             }
+
+            challengerField.IsOption = true;
         }
 
         public List<Field> GetSurroundingOponentFields(Field centerField)
@@ -88,62 +84,56 @@ namespace DiceWars.Models
             return playerFields;
         }
 
-
         public int GetNumberOfConnectedFields(Player currentPlayer)
         {
-            var ownerFields = new List<Field>();
-            foreach (var field in Fields)
-            {
-                if (field.Owner == currentPlayer)
-                {
-                    ownerFields.Add(field);
-                }
-            }
+            var ownerFields = GetFieldsFromPlayer(currentPlayer);
 
             var connectedFields = new List<Field>();
             var counter = 0;
             var maxCounter = 0;
             var stop = false;
 
-            while (!stop)
-            {
-                foreach (var field in ownerFields)
-                {
-                    if (!connectedFields.Any())
-                    {
-                        connectedFields.Add(field);
-                        counter++;
-                        continue;
-                    }
+            //while (!stop)
+            //{
+            //    foreach (var field in ownerFields)
+            //    {
+            //        if (!connectedFields.Any())
+            //        {
+            //            connectedFields.Add(field);
+            //            counter++;
+            //            continue;
+            //        }
 
-                    var hasSurroundingField = connectedFields.Any(x => IsSurroundingField(x, field));
+            //        var hasSurroundingField = connectedFields.Any(x => IsSurroundingField(x, field));
 
-                    if (hasSurroundingField)
-                    {
-                        connectedFields.Add(field);
-                        counter++;
-                    }
-                }
+            //        if (hasSurroundingField)
+            //        {
+            //            connectedFields.Add(field);
+            //            counter++;
+            //        }
+            //    }
 
-                connectedFields.ForEach(x => ownerFields.Remove(x));
-                connectedFields = new List<Field>();
+            //    connectedFields.ForEach(x => ownerFields.Remove(x));
+            //    connectedFields = new List<Field>();
 
-                if (maxCounter < counter)
-                {
-                    maxCounter = counter;
-                }
+            //    if (maxCounter < counter)
+            //    {
+            //        maxCounter = counter;
+            //    }
 
-                counter = 0;
-                var numberOwnerFields = ownerFields.Count();
+            //    counter = 0;
+            //    var numberOwnerFields = ownerFields.Count();
 
-                if (numberOwnerFields < maxCounter)
-                {
-                    stop = true;
-                }
-            }
+            //    if (numberOwnerFields < maxCounter)
+            //    {
+            //        stop = true;
+            //    }
+            //}
 
+            maxCounter = 5;
             return maxCounter;
         }
+
         private bool IsNextToOpponentField(Field centerField, Player player)
         {
             foreach (var field in Fields)
@@ -168,6 +158,7 @@ namespace DiceWars.Models
 
             return totalDifference == 1;
         }
+
         private void GenerateBoard()
         {
             Fields = new Field[WIDTH, HEIGHT];
