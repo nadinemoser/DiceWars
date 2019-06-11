@@ -12,8 +12,10 @@ namespace DiceWars.Views
 	    private GameViewModel _gameViewModel;
 	    private Button _lastFramedField;
 	    private GameResultsViewModel _gameResultViewModel;
+	    private Label _challengerLabel;
+	    private Label _defenderLabel;
 
-		public BetterBoardView ()
+	    public BetterBoardView ()
 		{
 			InitializeComponent ();
             _gameViewModel = new GameViewModel();
@@ -44,6 +46,37 @@ namespace DiceWars.Views
 	        Grid.SetRow(endRoundButton, 4);
 	        grid.Children.Add(endRoundButton);
 	        endRoundButton.Clicked += OnEndRoundClicked;
+
+            // add labels for amount of dice numbers
+            _challengerLabel = new Label();
+	        _challengerLabel.HorizontalTextAlignment = TextAlignment.Center;
+	        _challengerLabel.VerticalTextAlignment = TextAlignment.Center;
+	        _challengerLabel.Text = "User";
+            Grid.SetColumn(_challengerLabel, 0);
+	        Grid.SetRow(_challengerLabel, 4);
+
+
+            var boxView = new BoxView {BackgroundColor = Xamarin.Forms.Color.Yellow, CornerRadius = 40};
+	        Grid.SetColumn(boxView, 0);
+	        Grid.SetRow(boxView, 4);
+
+	        grid.Children.Add(boxView);
+	        grid.Children.Add(_challengerLabel);
+
+            _defenderLabel = new Label();
+	        _defenderLabel.HorizontalTextAlignment = TextAlignment.Center;
+	        _defenderLabel.VerticalTextAlignment = TextAlignment.Center;
+	        _defenderLabel.Text = "Computer";
+            Grid.SetColumn(_defenderLabel, 3);
+	        Grid.SetRow(_defenderLabel, 4);
+
+	        var boxViewBlue = new BoxView { BackgroundColor = Xamarin.Forms.Color.LightBlue, CornerRadius = 40};
+	        Grid.SetColumn(boxViewBlue, 3);
+	        Grid.SetRow(boxViewBlue, 4);
+	        grid.Children.Add(boxViewBlue);
+            grid.Children.Add(_defenderLabel);
+
+	        grid.Margin = 10;
 
             return grid;
 	    }
@@ -132,8 +165,9 @@ namespace DiceWars.Views
 	            && _gameResultViewModel.DefenderField != null)
 	        {
                 ResetLastFramedField();
-	        }
-
+	            _challengerLabel.Text = $"{_gameResultViewModel.ChallengerFieldUser}:  {_gameResultViewModel.RolledDiceNumberChallenger.ToString()}";
+	            _defenderLabel.Text = $"{_gameResultViewModel.DefenderFieldUser}:  {_gameResultViewModel.RolledDiceNumberDefender.ToString()}";
+            }
 	    }
 
 	    private async void ShowEndGameMessage()
@@ -177,6 +211,10 @@ namespace DiceWars.Views
 	            case Color.Blue:
 	            {
 	                return Xamarin.Forms.Color.Blue;
+	            }
+	            case Color.LightBlue:
+	            {
+	                return Xamarin.Forms.Color.LightBlue;
 	            }
 	            default:
 	            {

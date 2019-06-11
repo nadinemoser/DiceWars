@@ -14,7 +14,7 @@ namespace DiceWars.Models
         public GameBoard()
         {
             User = new Player { Name = "User", FavoriteColor = Color.Yellow };
-            Computer = new Player { Name = "Computer", FavoriteColor = Color.Blue };
+            Computer = new Player { Name = "Computer", FavoriteColor = Color.LightBlue };
             GenerateBoard();
         }
 

@@ -7,6 +7,7 @@ namespace DiceWars
     public enum Color
     { 
         Yellow,
-        Blue
+        Blue,
+        LightBlue
     }
 }

@@ -65,7 +65,9 @@ namespace DiceWars.ViewModels
                 }
 
                 _gameResults.ChallengerField = ChallengerField;
+                _gameResults.ChallengerFieldUser = ChallengerField.Owner.Name;
                 _gameResults.DefenderField = DefenderField;
+                _gameResults.DefenderFieldUser = DefenderField.Owner.Name;
 
                 StartDiceChallenge();
                 _gameBoard.UpdateFieldsForPlayer(CurrentPlayer);
