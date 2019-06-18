@@ -89,8 +89,8 @@ namespace DiceWars.ViewModels
         
         private void StartDiceChallenge()
         {
-            _gameResults.RolledDiceNumberChallenger = RollDice(ChallengerField);
-            _gameResults.RolledDiceNumberDefender = RollDice(DefenderField);
+            _gameResults.RolledDiceNumberChallenger = RollDice(_gameResults.ChallengerField);
+            _gameResults.RolledDiceNumberDefender = RollDice(_gameResults.DefenderField);
             
             if (_gameResults.RolledDiceNumberChallenger > _gameResults.RolledDiceNumberDefender)
             {
@@ -153,6 +153,9 @@ namespace DiceWars.ViewModels
                 {
                     _gameResults.ChallengerField = challengerField;
                     _gameResults.DefenderField = opponentField;
+
+                    ChallengerField = challengerField;
+                    DefenderField = opponentField;
 
                     if (challengerField.NumberOfDices > 1 
                         && _gameBoard.IsOpponentField(_gameResults.ChallengerField, _gameResults.DefenderField))

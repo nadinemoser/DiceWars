@@ -152,6 +152,7 @@ namespace DiceWars.Views
 	    {
 	        if (_gameResultViewModel == null)
 	        {
+                ResetLastFramedField();
 	            return;
 	        }
 
