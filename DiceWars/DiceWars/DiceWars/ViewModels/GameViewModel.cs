@@ -78,6 +78,7 @@ namespace DiceWars.ViewModels
 
         public void EndRound()
         {
+            _gameResults = new GameResultsViewModel();
             GetRewardForCurrentPlayer();
             ResetCurrentFields();
 
@@ -150,11 +151,11 @@ namespace DiceWars.ViewModels
 
                 foreach (var opponentField in opponentFields)
                 {
-                    ChallengerField = challengerField;
-                    DefenderField = opponentField;
+                    _gameResults.ChallengerField = challengerField;
+                    _gameResults.DefenderField = opponentField;
 
                     if (challengerField.NumberOfDices > 1 
-                        && _gameBoard.IsOpponentField(ChallengerField, DefenderField))
+                        && _gameBoard.IsOpponentField(_gameResults.ChallengerField, _gameResults.DefenderField))
                     {
                         StartDiceChallenge();
                     }

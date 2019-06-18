@@ -48,11 +48,13 @@ namespace DiceWars.Views
 	        endRoundButton.Clicked += OnEndRoundClicked;
 
             // add labels for amount of dice numbers
-            _challengerLabel = new Label();
-	        _challengerLabel.HorizontalTextAlignment = TextAlignment.Center;
-	        _challengerLabel.VerticalTextAlignment = TextAlignment.Center;
-	        _challengerLabel.Text = "User";
-            Grid.SetColumn(_challengerLabel, 0);
+	        _challengerLabel = new Label
+	        {
+	            HorizontalTextAlignment = TextAlignment.Center,
+	            VerticalTextAlignment = TextAlignment.Center,
+	            Text = "User"
+	        };
+	        Grid.SetColumn(_challengerLabel, 0);
 	        Grid.SetRow(_challengerLabel, 4);
 
 
@@ -63,14 +65,21 @@ namespace DiceWars.Views
 	        grid.Children.Add(boxView);
 	        grid.Children.Add(_challengerLabel);
 
-            _defenderLabel = new Label();
-	        _defenderLabel.HorizontalTextAlignment = TextAlignment.Center;
-	        _defenderLabel.VerticalTextAlignment = TextAlignment.Center;
-	        _defenderLabel.Text = "Computer";
-            Grid.SetColumn(_defenderLabel, 3);
+	        _defenderLabel = new Label
+	        {
+	            HorizontalTextAlignment = TextAlignment.Center,
+	            VerticalTextAlignment = TextAlignment.Center,
+	            Text = "Computer"
+	        };
+	        Grid.SetColumn(_defenderLabel, 3);
 	        Grid.SetRow(_defenderLabel, 4);
 
-	        var boxViewBlue = new BoxView { BackgroundColor = Xamarin.Forms.Color.LightBlue, CornerRadius = 40};
+	        var boxViewBlue = new BoxView
+	        {
+	            BackgroundColor = Xamarin.Forms.Color.LightBlue,
+	            CornerRadius = 40
+	        };
+
 	        Grid.SetColumn(boxViewBlue, 3);
 	        Grid.SetRow(boxViewBlue, 4);
 	        grid.Children.Add(boxViewBlue);
