@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<ContentView xmlns="http://xamarin.com/schemas/2014/forms" 
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="DiceWars.Controls.DiceResultsControl">
+    
+    <ContentView>
+        <StackLayout x:Name="stacklayout">
+            <Label x:Name="user"
+                   FontSize="14"
+                   VerticalOptions="Center"
+                   TextColor="Gray"
+                   HorizontalOptions="Center" 
+                   FontAttributes="Bold"/>
+
+            <Grid>
+                <Image x:Name="image" Aspect="AspectFit"></Image>
+
+                <Label x:Name="diceNumber"
+                       FontSize="20"
+                       VerticalOptions="Center"
+                       TextColor="Black"
+                       HorizontalOptions="Center" 
+                       FontAttributes="Bold"/>
+            </Grid>
+        </StackLayout>
+    </ContentView>
+</ContentView>

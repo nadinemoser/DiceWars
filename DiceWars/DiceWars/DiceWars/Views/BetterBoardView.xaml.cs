@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using DiceWars.Controls;
 using DiceWars.ViewModels;
 using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
@@ -7,231 +8,313 @@ using Xamarin.Forms.Xaml;
 namespace DiceWars.Views
 {
     [XamlCompilation(XamlCompilationOptions.Compile)]
-	public partial class BetterBoardView : ContentPage
-	{
-	    private GameViewModel _gameViewModel;
-	    private Button _lastFramedField;
-	    private GameResultsViewModel _gameResultViewModel;
-	    private Label _challengerLabel;
-	    private Label _defenderLabel;
+    public partial class BetterBoardView : ContentPage
+    {
+        private DiceResultsControl _userControl;
+        private DiceResultsControl _defenderControl;
+        private GameResultsViewModel _gameResultViewModel;
+        private GameViewModel _gameViewModel;
+        private Button _lastFramedField;
+        private Button _endRoundButton;
+        private Grid _grid;
 
-	    public BetterBoardView ()
-		{
-			InitializeComponent ();
+        public BetterBoardView()
+        {
+            InitializeComponent();
             _gameViewModel = new GameViewModel();
-		    Content = GenerateGrid();
+            Content = GenerateGrid();
             UpdateView();
+            SizeChanged += MainPageSizeChanged;
         }
 
-	    private Grid GenerateGrid()
-	    {
-	        var grid = new Grid();
+        private void MainPageSizeChanged(object sender, EventArgs e)
+        {
+            bool isPortrait = Height > Width;
+            if (isPortrait)
+            {
+                Grid.SetColumn(_userControl, 0);
+                Grid.SetRow(_userControl, 4);
+
+                Grid.SetColumn(_endRoundButton, 1);
+                Grid.SetRow(_endRoundButton, 4);
+                Grid.SetColumnSpan(_endRoundButton, 2);
+                Grid.SetRowSpan(_endRoundButton, 1);
+
+                Grid.SetColumn(_defenderControl, 3);
+                Grid.SetRow(_defenderControl, 4);
+
+                if (_grid.ColumnDefinitions.Count > 4 && _grid.RowDefinitions.Count > 4)
+                {
+                    _grid.ColumnDefinitions[4].Width = 0;
+                    _grid.RowDefinitions[4].Height = new GridLength(4, GridUnitType.Star);
+                }
+                _userControl.Image = "yellowdiceoriginal.png";
+                _defenderControl.Image = "lightbluediceoriginal.png";
+            }
+            else
+            {
+                Grid.SetColumn(_userControl, 4);
+                Grid.SetRow(_userControl, 0);
+
+                Grid.SetColumn(_endRoundButton, 4);
+                Grid.SetRow(_endRoundButton, 1);
+                Grid.SetColumnSpan(_endRoundButton, 1);
+                Grid.SetRowSpan(_endRoundButton, 2);
+
+                Grid.SetColumn(_defenderControl, 4);
+                Grid.SetRow(_defenderControl, 3);
+
+                if (_grid.ColumnDefinitions.Count > 4 && _grid.RowDefinitions.Count > 4)
+                {
+                    _grid.RowDefinitions[4].Height = 0;
+                    _grid.ColumnDefinitions[4].Width = new GridLength(4, GridUnitType.Star);
+                }
+
+                _userControl.Image = "yellowdice.png";
+                _defenderControl.Image = "lightbluedice.png";
+            }
+        }
+
+        private Grid GenerateGrid()
+        {
+            _grid = new Grid();
 
             foreach (var field in _gameViewModel.Board)
-	        {
-                var button = new Button{Text = $"{field.NumberOfDices}", BackgroundColor = GetColor(field.Owner.FavoriteColor)};
-	            Grid.SetColumn(button, field.XCoordinate);
-	            Grid.SetRow(button, field.YCoordinate);
+            {
+                var button = new Button
+                {
+                    Text = $"{field.NumberOfDices}",
+                    FontSize = 20,
 
-                grid.Children.Add(button);
-                grid.Padding = new Thickness(0,0,0,0);
+                    BackgroundColor = GetColor(field.Owner.FavoriteColor)
+                };
 
-	            button.Clicked += OnFieldClicked;
-	        }
+                SetFrameForField(button, GetBorderColor(field.Owner.FavoriteColor));
 
-            // Ad EndRound Button
-	        var endRoundButton = new Button(){Text = "End Round"};
-	        Grid.SetColumn(endRoundButton, 1);
-            Grid.SetColumnSpan(endRoundButton, 2);
-	        Grid.SetRow(endRoundButton, 4);
-	        grid.Children.Add(endRoundButton);
-	        endRoundButton.Clicked += OnEndRoundClicked;
+                Grid.SetColumn(button, field.XCoordinate);
+                Grid.SetRow(button, field.YCoordinate);
 
-            // add labels for amount of dice numbers
-	        _challengerLabel = new Label
-	        {
-	            HorizontalTextAlignment = TextAlignment.Center,
-	            VerticalTextAlignment = TextAlignment.Center,
-	            Text = "User"
-	        };
-	        Grid.SetColumn(_challengerLabel, 0);
-	        Grid.SetRow(_challengerLabel, 4);
+                _grid.Children.Add(button);
+                _grid.Padding = new Thickness(0, 0, 0, 0);
 
+                button.Clicked += OnFieldClicked;
+            }
 
-            var boxView = new BoxView {BackgroundColor = Xamarin.Forms.Color.Yellow, CornerRadius = 40};
-	        Grid.SetColumn(boxView, 0);
-	        Grid.SetRow(boxView, 4);
+            // Add EndRound Button
+            _endRoundButton = new Button {Text = "End Round"};
+            Grid.SetColumn(_endRoundButton, 1);
+            Grid.SetColumnSpan(_endRoundButton, 2);
+            Grid.SetRow(_endRoundButton, 4);
+            _grid.Children.Add(_endRoundButton);
+            _endRoundButton.Clicked += OnEndRoundClicked;
+            
+            _userControl = new DiceResultsControl();
+            _userControl.UserText = "Nadine :";
+            _userControl.Image = "yellowdice.png";
 
-	        grid.Children.Add(boxView);
-	        grid.Children.Add(_challengerLabel);
+            Grid.SetColumn(_userControl, 0);
+            Grid.SetRow(_userControl, 4);
+            _grid.Children.Add(_userControl);
 
-	        _defenderLabel = new Label
-	        {
-	            HorizontalTextAlignment = TextAlignment.Center,
-	            VerticalTextAlignment = TextAlignment.Center,
-	            Text = "Computer"
-	        };
-	        Grid.SetColumn(_defenderLabel, 3);
-	        Grid.SetRow(_defenderLabel, 4);
+            _defenderControl = new DiceResultsControl();
+            _defenderControl.UserText = "Computer :";
+            _defenderControl.Image = "lightbluedice.png";
 
-	        var boxViewBlue = new BoxView
-	        {
-	            BackgroundColor = Xamarin.Forms.Color.LightBlue,
-	            CornerRadius = 40
-	        };
+            Grid.SetColumn(_defenderControl, 3);
+            Grid.SetRow(_defenderControl, 4);
+            _grid.Children.Add(_defenderControl);
 
-	        Grid.SetColumn(boxViewBlue, 3);
-	        Grid.SetRow(boxViewBlue, 4);
-	        grid.Children.Add(boxViewBlue);
-            grid.Children.Add(_defenderLabel);
+            _grid.Margin = 10;
 
-	        grid.Margin = 10;
-
-            return grid;
-	    }
+            return _grid;
+        }
 
         private void OnEndRoundClicked(object sender, EventArgs e)
         {
             _gameViewModel.EndRound();
             UpdateView();
             ResetLastFramedField();
+            ResetScore();
         }
 
-	    private void ResetLastFramedField()
-	    {
-            if(_lastFramedField != null)
-	        {
-	            _lastFramedField.BorderWidth = 0;
-	            _lastFramedField = null;
+        private void ResetScore()
+        {
+            _userControl.NumberOfDiceText = string.Empty;
+            _defenderControl.NumberOfDiceText = string.Empty;
+        }
+
+        private void ResetLastFramedField()
+        {
+            if (_lastFramedField != null)
+            {
+                SetFrameForField(_lastFramedField, GetBorderColorFromBackground(_lastFramedField.BackgroundColor));
             }
         }
 
-	    private void OnFieldClicked(object sender, EventArgs e)
+        private void OnFieldClicked(object sender, EventArgs e)
         {
-            var field = (Button)sender;
+            var field = (Button) sender;
 
             var x = Grid.GetColumn(field);
-	        var y = Grid.GetRow(field);
+            var y = Grid.GetRow(field);
 
-	        _gameResultViewModel = _gameViewModel.FieldGotSelected(x, y);
-	        UpdateView();
+            _gameResultViewModel = _gameViewModel.FieldGotSelected(x, y);
+            UpdateView();
         }
 
-        private void SetFrameForField(Button field)
+        private void SetFrameForField(Button field, Xamarin.Forms.Color color)
         {
             _lastFramedField = field;
-            _lastFramedField.BorderColor = Xamarin.Forms.Color.Red;
+            _lastFramedField.BorderColor = color;
             _lastFramedField.BorderWidth = 2;
         }
 
         private void UpdateView()
-	    {
-	        foreach (var view in ((Grid)Content).Children.Where(c => c.GetType() == typeof(Button)))
-	        {
-	            var button = (Button) view;
-	            foreach (var field in _gameViewModel.Board)
-	            {
-	                if (Grid.GetColumn(button) == field.XCoordinate && Grid.GetRow(button) == field.YCoordinate)
-	                {
-	                    button.BackgroundColor = GetColor(field.Owner.FavoriteColor);
-	                    button.Text = field.NumberOfDices.ToString();
-	                    button.IsEnabled = field.IsOption;
-	                }
-	            }
-	        }
-
-	        UpdateViewWithResults();
-
-	        if (HasGameEnd())
-	        {
-	            ShowEndGameMessage();
-	        }
-	    }
-
-	    private void UpdateViewWithResults()
-	    {
-	        if (_gameResultViewModel == null)
-	        {
-                ResetLastFramedField();
-	            return;
-	        }
-
-	        if (_gameResultViewModel.ChallengerField != null 
-	            && _gameResultViewModel.DefenderField == null)
-	        {
-                var field = _gameResultViewModel.ChallengerField;
-                foreach (var view in ((Grid)Content).Children.Where(c => c.GetType() == typeof(Button)))
+        {
+            foreach (var view in ((Grid) Content).Children.Where(c => c.GetType() == typeof(Button)))
+            {
+                var button = (Button) view;
+                foreach (var field in _gameViewModel.Board)
                 {
-                    var button = (Button)view;
-
                     if (Grid.GetColumn(button) == field.XCoordinate && Grid.GetRow(button) == field.YCoordinate)
                     {
-                        SetFrameForField(button);
+                        button.BackgroundColor = GetColor(field.Owner.FavoriteColor);
+                        button.Text = field.NumberOfDices.ToString();
+                        button.IsEnabled = field.IsOption;
+                        SetFrameForField(button, GetBorderColorFromBackground(button.BackgroundColor));
                     }
                 }
             }
 
-	        if (_gameResultViewModel.ChallengerField != null 
-	            && _gameResultViewModel.DefenderField != null)
-	        {
+            UpdateViewWithResults();
+
+            if (HasGameEnd())
+            {
+                ShowEndGameMessage();
+            }
+        }
+
+        private void UpdateViewWithResults()
+        {
+            if (_gameResultViewModel == null)
+            {
                 ResetLastFramedField();
-	            _challengerLabel.Text = $"{_gameResultViewModel.ChallengerFieldUser}:  {_gameResultViewModel.RolledDiceNumberChallenger.ToString()}";
-	            _defenderLabel.Text = $"{_gameResultViewModel.DefenderFieldUser}:  {_gameResultViewModel.RolledDiceNumberDefender.ToString()}";
+                return;
             }
-	    }
 
-	    private async void ShowEndGameMessage()
-	    {
-	        var player = _gameViewModel.Board[0, 0].Owner;
-	        bool answer = await DisplayAlert($"{player.Name} has won.", "new game?", "yes", "no");
+            if (_gameResultViewModel.ChallengerField != null
+                && _gameResultViewModel.DefenderField == null)
+            {
+                var field = _gameResultViewModel.ChallengerField;
+                foreach (var view in ((Grid) Content).Children.Where(c => c.GetType() == typeof(Button)))
+                {
+                    var button = (Button) view;
 
-	        if (answer)
-	        {
-	            _gameViewModel = new GameViewModel();
+                    if (Grid.GetColumn(button) == field.XCoordinate && Grid.GetRow(button) == field.YCoordinate)
+                    {
+                        SetFrameForField(button, Xamarin.Forms.Color.Red);
+                    }
+                }
+            }
+
+            if (_gameResultViewModel.ChallengerField != null
+                && _gameResultViewModel.DefenderField != null)
+            {
+                ResetLastFramedField();
+                _userControl.NumberOfDiceText = $"{_gameResultViewModel.RolledDiceNumberChallenger.ToString()}";
+                _defenderControl.NumberOfDiceText = $"{_gameResultViewModel.RolledDiceNumberDefender.ToString()}";
+            }
+        }
+
+        private async void ShowEndGameMessage()
+        {
+            var player = _gameViewModel.Board[0, 0].Owner;
+            var answer = await DisplayAlert($"{player.Name} has won.", "new game?", "yes", "no");
+
+            if (answer)
+            {
+                _gameViewModel = new GameViewModel();
                 UpdateView();
-	        }
-	        else
-	        {
-	            await Navigation.PopModalAsync();
+            }
+            else
+            {
+                await Navigation.PopModalAsync();
             }
         }
 
-	    private bool HasGameEnd()
-	    {
-	        var fieldToCompareWith = _gameViewModel.Board[0, 0];
-	        foreach (var field in _gameViewModel.Board)
-	        {
-	            if (fieldToCompareWith.Owner != field.Owner)
-	            {
-	                return false;
-	            }
-	        }
-
-	        return true;
-	    }
-
-	    private Xamarin.Forms.Color GetColor(Color color)
-	    {
-	        switch (color)
-	        {
-	            case Color.Yellow:
-	            {
-	                return Xamarin.Forms.Color.Yellow;
-	            }
-	            case Color.Blue:
-	            {
-	                return Xamarin.Forms.Color.Blue;
-	            }
-	            case Color.LightBlue:
-	            {
-	                return Xamarin.Forms.Color.LightBlue;
-	            }
-	            default:
-	            {
-	                return Xamarin.Forms.Color.Black;
-	            }
+        private bool HasGameEnd()
+        {
+            var fieldToCompareWith = _gameViewModel.Board[0, 0];
+            foreach (var field in _gameViewModel.Board)
+            {
+                if (fieldToCompareWith.Owner != field.Owner)
+                {
+                    return false;
+                }
             }
 
+            return true;
         }
-	}
+
+        private Xamarin.Forms.Color GetBorderColorFromBackground(Xamarin.Forms.Color color)
+        {
+            if (color == Xamarin.Forms.Color.Yellow)
+            {
+                return Xamarin.Forms.Color.Red;
+            }
+
+            if (color == Xamarin.Forms.Color.LightBlue)
+            {
+                return Xamarin.Forms.Color.Blue;
+            }
+
+            return Xamarin.Forms.Color.Black;
+        }
+
+        private Xamarin.Forms.Color GetBorderColor(Color color)
+        {
+            switch (color)
+            {
+                case Color.Yellow:
+                {
+                    return Xamarin.Forms.Color.Red;
+                }
+                case Color.Blue:
+                {
+                    return Xamarin.Forms.Color.Blue;
+                }
+                case Color.LightBlue:
+                {
+                    return Xamarin.Forms.Color.Blue;
+                }
+                default:
+                {
+                    return Xamarin.Forms.Color.Black;
+                }
+            }
+        }
+
+        private Xamarin.Forms.Color GetColor(Color color)
+        {
+            switch (color)
+            {
+                case Color.Yellow:
+                {
+                    return Xamarin.Forms.Color.Yellow;
+                }
+                case Color.Blue:
+                {
+                    return Xamarin.Forms.Color.Blue;
+                }
+                case Color.LightBlue:
+                {
+                    return Xamarin.Forms.Color.LightBlue;
+                }
+                default:
+                {
+                    return Xamarin.Forms.Color.Black;
+                }
+            }
+        }
+    }
 }
