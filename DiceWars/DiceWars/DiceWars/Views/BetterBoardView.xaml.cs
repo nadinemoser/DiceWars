@@ -2,6 +2,7 @@
 using System.Linq;
 using DiceWars.Controls;
 using DiceWars.ViewModels;
+using Lottie.Forms;
 using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
 
@@ -228,6 +229,25 @@ namespace DiceWars.Views
 
         private async void ShowEndGameMessage()
         {
+            // Add Confetti
+            var animation = new AnimationView
+            {
+                Animation = "confetti.json",
+                Loop = true,
+                AutoPlay = true,
+                VerticalOptions = LayoutOptions.FillAndExpand,
+                HorizontalOptions = LayoutOptions.FillAndExpand
+            };
+
+            _grid = new Grid();
+
+            Grid.SetColumn(animation, 0);
+            Grid.SetRow(animation, 0);
+
+            _grid.Children.Add(animation);
+
+            Content = _grid;
+
             var player = _gameViewModel.Board[0, 0].Owner;
             var answer = await DisplayAlert($"{player.Name} has won.", "new game?", "yes", "no");
 
