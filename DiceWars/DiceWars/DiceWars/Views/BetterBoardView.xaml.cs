@@ -22,13 +22,24 @@ namespace DiceWars.Views
         public BetterBoardView()
         {
             InitializeComponent();
-            _gameViewModel = new GameViewModel();
-            Content = GenerateGrid();
-            UpdateView();
+            StartNewGame();
             SizeChanged += MainPageSizeChanged;
         }
 
+        private void StartNewGame()
+        {
+            _gameViewModel = new GameViewModel();
+            _gameResultViewModel = new GameResultsViewModel();
+            Content = GenerateGrid();
+            UpdateView();
+        }
+
         private void MainPageSizeChanged(object sender, EventArgs e)
+        {
+            AdaptViewToOrientation();
+        }
+
+        private void AdaptViewToOrientation()
         {
             bool isPortrait = Height > Width;
             if (isPortrait)
@@ -111,7 +122,7 @@ namespace DiceWars.Views
             
             _userControl = new DiceResultsControl();
             _userControl.UserText = "Nadine :";
-            _userControl.Image = "yellowdice.png";
+            _userControl.Image = "yellowdiceoriginal.png";
 
             Grid.SetColumn(_userControl, 0);
             Grid.SetRow(_userControl, 4);
@@ -119,7 +130,7 @@ namespace DiceWars.Views
 
             _defenderControl = new DiceResultsControl();
             _defenderControl.UserText = "Computer :";
-            _defenderControl.Image = "lightbluedice.png";
+            _defenderControl.Image = "lightbluediceoriginal.png";
 
             Grid.SetColumn(_defenderControl, 3);
             Grid.SetRow(_defenderControl, 4);
@@ -193,6 +204,8 @@ namespace DiceWars.Views
             {
                 ShowEndGameMessage();
             }
+
+            AdaptViewToOrientation();
         }
 
         private void UpdateViewWithResults()
@@ -229,7 +242,6 @@ namespace DiceWars.Views
 
         private async void ShowEndGameMessage()
         {
-            // Add Confetti
             var animation = new AnimationView
             {
                 Animation = "confetti.json",
@@ -253,8 +265,7 @@ namespace DiceWars.Views
 
             if (answer)
             {
-                _gameViewModel = new GameViewModel();
-                UpdateView();
+                StartNewGame();
             }
             else
             {
